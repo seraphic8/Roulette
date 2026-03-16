@@ -32,7 +32,7 @@
                     <span class="absolute -top-3 left-2 bg-pink-500 text-white text-[10px] px-2 rounded-full font-bold">Joueur F</span>
                 </div>
             </div>
-            <div id="connectionStatus" class="text-xs font-medium text-slate-400 italic">Connexion...</div>
+            <div id="connectionStatus" class="text-xs font-medium text-slate-400 italic">Initialisation...</div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -103,7 +103,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // ÉTAT PAR DÉFAUT COMPLET AVEC TOUTES VOS VALEURS
+        // ÉTAT PAR DÉFAUT COMPLET (Vos valeurs sauvegardées)
         let state = {
             levels: [
                 { 
@@ -285,33 +285,19 @@
             isSoundEnabled: true
         };
 
+        // Gestion des variables d'environnement pour éviter le blocage
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'defis-connect-v1';
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let user = null;
-        let timer = null;
-        let audioCtx = null;
+        let db, auth;
 
-        const getGameStateDoc = () => doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
-
-        function playAlarm() {
-            if (!state.isSoundEnabled) return;
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 1);
+        function updateConnectionStatus(text) {
+            document.getElementById('connectionStatus').textContent = text;
         }
 
         window.spin = (levelIdx) => {
-            clearInterval(timer);
+            if (timer) clearInterval(timer);
             const level = state.levels[levelIdx];
-            const pM = document.getElementById('playerM').value;
-            const pF = document.getElementById('playerF').value;
+            const pM = document.getElementById('playerM').value || "M";
+            const pF = document.getElementById('playerF').value || "F";
             
             let pool = level.items.filter(item => {
                 const lowerItem = item.toLowerCase();
@@ -375,11 +361,34 @@
             const display = document.getElementById('timerDisplay');
             timer = setInterval(() => {
                 remaining--;
-                if (remaining < 0) { clearInterval(timer); playAlarm(); showToast("Temps écoulé !"); return; }
+                if (remaining < 0) { 
+                    clearInterval(timer); 
+                    playAlarm(); 
+                    showToast("Temps écoulé !"); 
+                    display.textContent = "00:00";
+                    return; 
+                }
                 const m = Math.floor(remaining / 60);
                 const s = remaining % 60;
                 display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             }, 1000);
+        }
+
+        let audioCtx = null;
+        function playAlarm() {
+            if (!state.isSoundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch(e) {}
         }
 
         function renderSoundIcon() {
@@ -433,10 +442,11 @@
         }
 
         async function saveToCloud() {
-            if (user) {
+            if (db && auth && auth.currentUser) {
                 try {
-                    await setDoc(getGameStateDoc(), { state, updatedAt: Date.now() });
-                } catch (e) { console.error("Erreur sauvegarde:", e); }
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
+                    await setDoc(docRef, { state, updatedAt: Date.now() });
+                } catch (e) { console.warn("Erreur sauvegarde cloud"); }
             }
         }
 
@@ -444,17 +454,32 @@
             renderChecklist();
             renderSoundIcon();
             renderConfig();
+
+            // Vérifier si la config Firebase est présente
+            if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                updateConnectionStatus("Mode Local (Sans Cloud)");
+                return;
+            }
+
             try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                updateConnectionStatus("Authentification...");
+                
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
+
                 onAuthStateChanged(auth, (u) => {
-                    user = u;
-                    if (user) {
-                        document.getElementById('connectionStatus').textContent = "Synchronisé Cloud";
-                        onSnapshot(getGameStateDoc(), (snap) => {
+                    if (u) {
+                        updateConnectionStatus("Connecté au Cloud");
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
+                        onSnapshot(docRef, (snap) => {
                             if (snap.exists()) {
                                 const cloudData = snap.data().state;
                                 if (cloudData) {
@@ -465,11 +490,17 @@
                                     document.getElementById('filterModeBtn').textContent = `Mode: ${state.filterMode === 'standard' ? 'Standard' : 'Strict'}`;
                                 }
                             } else { saveToCloud(); }
+                        }, (err) => {
+                            console.warn("Firestore snapshot error:", err);
                         });
                     }
                 });
-            } catch (err) { console.error("Erreur init:", err); }
+            } catch (err) { 
+                console.error("Firebase init failed:", err);
+                updateConnectionStatus("Échec Cloud - Mode Local");
+            }
         };
+
         window.onload = init;
     </script>
 </body>
