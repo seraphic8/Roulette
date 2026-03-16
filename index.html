@@ -11,11 +11,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @keyframes pop-in { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes pulse-red { 0%, 100% { background-color: rgba(239, 68, 68, 0.1); color: rgba(239, 68, 68, 1); } 50% { background-color: rgba(239, 68, 68, 0.4); color: rgba(255, 255, 255, 1); } }
         .animate-pop { animation: pop-in 0.3s ease-out forwards; }
         .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); }
         .level-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .level-card:active { transform: scale(0.95); }
+        body { background-attachment: fixed; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans text-slate-100">
@@ -88,7 +88,7 @@
 
         <footer class="mt-10 space-y-4">
             <button onclick="toggleSection('configSection')" class="w-full text-center text-white/50 hover:text-white text-sm flex items-center justify-center gap-2">
-                <i data-lucide="database" class="w-4 h-4"></i> Base de données
+                <i data-lucide="database" class="w-4 h-4"></i> Configuration des Défis
             </button>
             <div id="configSection" class="hidden glass rounded-2xl p-6 shadow-xl border border-white/10 text-slate-800">
                 <div id="levelEditors" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -103,195 +103,33 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // ÉTAT PAR DÉFAUT COMPLET (Vos valeurs sauvegardées)
+        let timer = null;
         let state = {
             levels: [
-                { 
-                    id: 0, 
-                    name: "Soft", 
-                    items: [
-                        "$activePlayer embrasse $inactivePlayer",
-                        "$activePlayer embrasse $inactivePlayer sur la zone de son choix",
-                        "$activePlayer caresse $inactivePlayer",
-                        "$activePlayer se caresse",
-                        "$activePlayer demande à $inactivePlayer de se caresser la zone de ton choix",
-                        "$activePlayer masse la zone de ton choix de $inactivePlayer",
-                        "$activePlayer $inactivePlayer te masse la zone de ton choix",
-                        "$activePlayer caresse toi devant $inactivePlayer",
-                        "$activePlayer caresse $inactivePlayer",
-                        "$activePlayer lèche le cou de $inactivePlayer",
-                        "$activePlayer lèche la zone de son choix de $inactivePlayer",
-                        "$activePlayer suce les doigts de $inactivePlayer",
-                        "$activePlayer suce les tétons de $inactivePlayer",
-                        "$M regarde $F se caresser les seins",
-                        "$M suce ses tétons de $F",
-                        "$F se caresse les seins",
-                        "$F suce ses tétons",
-                        "$activePlayer et $inactivePlayer regardent une vidéo",
-                        "$activePlayer prend une photo de $inactivePlayer avec la camera",
-                        "$activePlayer bande les yeux de $inactivePlayer",
-                        "$activePlayer attache $inactivePlayer",
-                        "$activePlayer attache les mains de $inactivePlayer",
-                        "$activePlayer donne une fessèe $inactivePlayer"
-                    ], 
-                    duration: 20 
-                },
-                { 
-                    id: 1, 
-                    name: "Hot", 
-                    items: [
-                        "$F frotte ton sexe contre celui de $M",
-                        "$activePlayer suce la langue de $inactivePlayer",
-                        "$activePlayer embrasse le sexe de $inactivePlayer",
-                        "$activePlayer caresse le sexe de $inactivePlayer",
-                        "$activePlayer leche le sexe de $inactivePlayer",
-                        "$activePlayer demande à $inactivePlayer de te caresser la zone de ton choix",
-                        "$M masse les seins de $F",
-                        "$M frotte ton sexe entre les fesses de $F",
-                        "$M frotte ton sexe entre les seins de $F",
-                        "$F frotte ton sexe contre le sexe de $M",
-                        "$F écarte ton sexe $M",
-                        "$F raconte une ancienne experience à $M pendant que tu le masturbes",
-                        "$F raconte un fantasme à $M pendant que tu le masturbes",
-                        "$F raconte un fantasme à $M pendant que tu te masturbes",
-                        "$F frotte ton jouet contre ton sexe",
-                        "$F leche ton jouet",
-                        "$F suce ton jouet",
-                        "$F caresse ton anus",
-                        "$M caresse l' anus de $F",
-                        "$M leche l' anus de $F",
-                        "$F écarte ton sexe devant la camera",
-                        "$F caresse toi devant la camera"
-                    ], 
-                    duration: 60 
-                },
-                { 
-                    id: 2, 
-                    name: "Hard", 
-                    items: [
-                        "$activePlayer masturbe $inactivePlayer",
-                        "$activePlayer masturbe $inactivePlayer par derriere",
-                        "$activePlayer masturbe toi devant $inactivePlayer",
-                        "$activePlayer utilise la main de $inactivePlayer pour te faire plaisir",
-                        "$activePlayer et $inactivePlayer faites un 69",
-                        "$activePlayer et $inactivePlayer faites un 69 + jouet",
-                        "$activePlayer et $inactivePlayer masturbez vous mutuellement",
-                        "$activePlayer et $inactivePlayer masturbez vous mutuellement + jouet",
-                        "$M masturbe $F pendant qu\"elle le suce",
-                        "$M utilise le jouet sur $F",
-                        "$M utilise le jouet sur $F pendant qu'elle te suce",
-                        "$M joue avec l' anus de $F pendant qu'elle te suce",
-                        "$M touche $F pendant qu'elle utilise son jouet",
-                        "$F masturbe $M pendant que tu utilises ton jouet",
-                        "$F met toi à 4pattes pour te masturber",
-                        "$F suce $M pendant que tu utilises ton jouet à 4pattes",
-                        "$F suce $M pendant que tu utilises ton jouet",
-                        "$F suce $M pendant que tu te masturbes",
-                        "$F met toi à 4pattes pour sucer $M debout",
-                        "$F insere un plug dans ton anus",
-                        "$F insere un plug tail dans ton anus",
-                        "$M met un plug dans l'anus de $F",
-                        "$F utilise un plug pendant que tu te masturbes",
-                        "$F masturbe ton anus avec tes doigts",
-                        "$F masturbe ton anus avec un jouet",
-                        "$M masturbe l' anus de $F avec tes doigts",
-                        "$M masturbe l' anus de $F avec un jouet",
-                        "$F suce un jouet devant la camera",
-                        "$F suce un jouet devant la camera sans $M",
-                        "F masturbe toi devant la camera",
-                        "F masturbe toi devant la camera sans $M",
-                        "$F suce $M devant la camera",
-                        "$activePlayer et $inactivePlayer masturbez vous devant la camera"
-                    ], 
-                    duration: 120 
-                },
-                { 
-                    id: 3, 
-                    name: "Finish", 
-                    items: [
-                        "$activePlayer fait toi venir avec tes doigts",
-                        "$activePlayer fait toi venir avec tes doigts pendant que tu suce $M",
-                        "$activePlayer fait toi venir avec tes doigts et un plug",
-                        "$activePlayer fait toi venir avec tes doigts et un plug pendant que tu suce $M",
-                        "$activePlayer fait toi venir avec tes jouets et un plug",
-                        "$activePlayer fait toi venir avec tes jouets et un plug pendant que tu suce $M",
-                        "$M fait venir $F avec son jouet",
-                        "$M fait venir $F avec son jouet et un plug",
-                        "$M fait toi venir dans la bouche de $F",
-                        "$M fait toi venir dans le sexe de $F",
-                        "$M fait toi venir sur le visage de $F",
-                        "$M fait toi venir sur le corps de $F",
-                        "$M fait toi venir sur les seins de $F",
-                        "$M fait toi venir sur le sexe de $F",
-                        "$M fait toi venir sur les fesses de $F",
-                        "$M fait toi venir sur toi",
-                        "$F fait toi venir avec le jouet pendant que $M joue avec ton anus",
-                        "$M fait toi venir dans l' anus de $F",
-                        "$M fait toi venir dans l' anus de $F pendant qu'elle se fait venir",
-                        "$activePlayer fait venir $inactivePlayer",
-                        "$activePlayer fait toi venir comme tu veux",
-                        "$F fait venir $M dans ta bouche",
-                        "$F fait venir $M dans ta bouche et avale son sperme",
-                        "$activePlayer fait venir $inactivePlayer avec ta bouche",
-                        "$F fait venir $M sur la partie de son choix",
-                        "$F fait venir $M avec ta main",
-                        "$F chevauche $M de face",
-                        "$F chevauche $M de dos",
-                        "$activePlayer choisit la position",
-                        "$M prend $F en missionnaire",
-                        "$M prend $F sur le coté",
-                        "$M prend $F en levrette",
-                        "$M prend $F allongée sur le ventre",
-                        "$M vient dans $F",
-                        "$M prend $F en missionnaire pendant qu elle suce son jouet",
-                        "$M prend $F sur le coté pendant qu elle suce son jouet",
-                        "$M prend $F en levrette pendant qu elle suce son jouet",
-                        "$M prend $F allongée sur le ventre pendant qu elle suce son jouet",
-                        "$M vient dans $F",
-                        "$M prend $F en missionnaire + plug pendant qu elle suce son jouet",
-                        "$M prend $F sur le coté + plug pendant qu elle suce son jouet",
-                        "$M prend $F en levrette + plug pendant qu elle suce son jouet",
-                        "$M prend $F allongée sur le ventre + plug pendant qu elle suce son jouet",
-                        "$M vient dans $F",
-                        "$M prend $F en missionnaire + plug",
-                        "$M prend $F sur le coté pendant + plug",
-                        "$M prend $F en levrette pendant + plug",
-                        "$M prend $F allongée sur le ventre + plug",
-                        "$M prend $F comme tu veux",
-                        "$M prend $F comme elle veut",
-                        "$M prend $F dans l'anus",
-                        "$M prend $F en missionnaire dans l'anus",
-                        "$M prend $F sur le coté dans l'anus",
-                        "$M prend $F en levrette dans l'anus",
-                        "$M prend $F allongée sur le ventre dans l'anus",
-                        "$F fait toi venir devant la camera sans $M",
-                        "$F fait toi venir devant la camera",
-                        "$M fait venir $F devant la camera sans $M",
-                        "$M vient dans $F devant la camera",
-                        "$F écarte ton sexe devant la camera après que $M soit venu en toi",
-                        "$F fait venir $M devant la camera"
-                    ], 
-                    duration: 0 
-                }
+                { id: 0, name: "Soft", items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer caresse $inactivePlayer"], duration: 20 },
+                { id: 1, name: "Hot", items: ["$activePlayer suce la langue de $inactivePlayer", "$M masse les seins de $F"], duration: 60 },
+                { id: 2, name: "Hard", items: ["$activePlayer et $inactivePlayer faites un 69", "$M utilise le jouet sur $F"], duration: 120 },
+                { id: 3, name: "Finish", items: ["$activePlayer fait venir $inactivePlayer", "$M vient dans $F"], duration: 0 }
             ],
-            checklist: [
-                { text: "jouet", active: true }, 
-                { text: "plug", active: true }, 
-                { text: "anus", active: true }, 
-                { text: "camera", active: true }
-            ],
+            checklist: [{ text: "jouet", active: true }, { text: "plug", active: true }, { text: "anus", active: true }, { text: "camera", active: true }],
             filterMode: 'standard', 
             currentRoulettePlayer: 'M',
             isSoundEnabled: true
         };
 
-        // Gestion des variables d'environnement pour éviter le blocage
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'defis-connect-v1';
+        // On réinjecte vos listes complètes ici par précaution
+        const fullLevels = [
+            { id: 0, name: "Soft", duration: 20, items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer embrasse $inactivePlayer sur la zone de son choix", "$activePlayer caresse $inactivePlayer", "$activePlayer se caresse", "$activePlayer demande à $inactivePlayer de se caresser la zone de ton choix", "$activePlayer masse la zone de ton choix de $inactivePlayer", "$activePlayer $inactivePlayer te masse la zone de ton choix", "$activePlayer caresse toi devant $inactivePlayer", "$activePlayer caresse $inactivePlayer", "$activePlayer lèche le cou de $inactivePlayer", "$activePlayer lèche la zone de son choix de $inactivePlayer", "$activePlayer suce les doigts de $inactivePlayer", "$activePlayer suce les tétons de $inactivePlayer", "$M regarde $F se caresser les seins", "$M suce ses tétons de $F", "$F se caresse les seins", "$F suce ses tétons", "$activePlayer et $inactivePlayer regardent une vidéo", "$activePlayer prend une photo de $inactivePlayer avec la camera", "$activePlayer bande les yeux de $inactivePlayer", "$activePlayer attache $inactivePlayer", "$activePlayer attache les mains de $inactivePlayer", "$activePlayer donne une fessèe $inactivePlayer"] },
+            { id: 1, name: "Hot", duration: 60, items: ["$F frotte ton sexe contre celui de $M", "$activePlayer suce la langue de $inactivePlayer", "$activePlayer embrasse le sexe de $inactivePlayer", "$activePlayer caresse le sexe de $inactivePlayer", "$activePlayer leche le sexe de $inactivePlayer", "$activePlayer demande à $inactivePlayer de te caresser la zone de ton choix", "$M masse les seins de $F", "$M frotte ton sexe entre les fesses de $F", "$M frotte ton sexe entre les seins de $F", "$F frotte ton sexe contre le sexe de $M", "$F écarte ton sexe $M", "$F raconte une ancienne experience à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu te masturbes", "$F frotte ton jouet contre ton sexe", "$F leche ton jouet", "$F suce ton jouet", "$F caresse ton anus", "$M caresse l' anus de $F", "$M leche l' anus de $F", "$F écarte ton sexe devant la camera", "$F caresse toi devant la camera"] },
+            { id: 2, name: "Hard", duration: 120, items: ["$activePlayer masturbe $inactivePlayer", "$activePlayer masturbe $inactivePlayer par derriere", "$activePlayer masturbe toi devant $inactivePlayer", "$activePlayer utilise la main de $inactivePlayer pour te faire plaisir", "$activePlayer et $inactivePlayer faites un 69", "$activePlayer et $inactivePlayer faites un 69 + jouet", "$activePlayer et $inactivePlayer masturbez vous mutuellement", "$activePlayer et $inactivePlayer masturbez vous mutuellement + jouet", "$M masturbe $F pendant qu'elle le suce", "$M utilise le jouet sur $F", "$M utilise le jouet sur $F pendant qu'elle te suce", "$M joue avec l' anus de $F pendant qu'elle te suce", "$M touche $F pendant qu'elle utilise son jouet", "$F masturbe $M pendant que tu utilises ton jouet", "$F met toi à 4pattes pour te masturber", "$F suce $M pendant que tu utilises ton jouet à 4pattes", "$F suce $M pendant que tu utilises ton jouet", "$F suce $M pendant que tu te masturbes", "$F met toi à 4pattes pour sucer $M debout", "$F insere un plug dans ton anus", "$F insere un plug tail dans ton anus", "$M met un plug dans l'anus de $F", "$F utilise un plug pendant que tu te masturbes", "$F masturbe ton anus avec tes doigts", "$F masturbe ton anus avec un jouet", "$M masturbe l' anus de $F avec tes doigts", "$M masturbe l' anus de $F avec un jouet", "$F suce un jouet devant la camera", "$F suce un jouet devant la camera sans $M", "F masturbe toi devant la camera", "F masturbe toi devant la camera sans $M", "$F suce $M devant la camera", "$activePlayer et $inactivePlayer masturbez vous devant la camera"] },
+            { id: 3, name: "Finish", duration: 0, items: ["$activePlayer fait toi venir avec tes doigts", "$activePlayer fait toi venir avec tes doigts pendant que tu suce $M", "$activePlayer fait toi venir avec tes doigts et un plug", "$activePlayer fait toi venir avec tes doigts et un plug pendant que tu suce $M", "$activePlayer fait toi venir avec tes jouets et un plug", "$activePlayer fait toi venir avec tes jouets et un plug pendant que tu suce $M", "$M fait venir $F avec son jouet", "$M fait venir $F avec son jouet et un plug", "$M fait toi venir dans la bouche de $F", "$M fait toi venir dans le sexe de $F", "$M fait toi venir sur le visage de $F", "$M fait toi venir sur le corps de $F", "$M fait toi venir sur les seins de $F", "$M fait toi venir sur le sexe de $F", "$M fait toi venir sur les fesses de $F", "$M fait toi venir sur toi", "$F fait toi venir avec le jouet pendant que $M joue avec ton anus", "$M fait toi venir dans l' anus de $F", "$M fait toi venir dans l' anus de $F pendant qu'elle se fait venir", "$activePlayer fait venir $inactivePlayer", "$activePlayer fait toi venir comme tu veux", "$F fait venir $M dans ta bouche", "$F fait venir $M dans ta bouche et avale son sperme", "$activePlayer fait venir $inactivePlayer avec ta bouche", "$F fait venir $M sur la partie de son choix", "$F fait venir $M avec ta main", "$F chevauche $M de face", "$F chevauche $M de dos", "$activePlayer choisit la position", "$M prend $F en missionnaire", "$M prend $F sur le coté", "$M prend $F en levrette", "$M prend $F allongée sur le ventre", "$M vient dans $F", "$M prend $F en missionnaire pendant qu elle suce son jouet", "$M prend $F sur le coté pendant qu elle suce son jouet", "$M prend $F en levrette pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug pendant qu elle suce son jouet", "$M prend $F sur le coté + plug pendant qu elle suce son jouet", "$M prend $F en levrette + plug pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre + plug pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug", "$M prend $F sur le coté pendant + plug", "$M prend $F en levrette pendant + plug", "$M prend $F allongée sur le ventre + plug", "$M prend $F comme tu veux", "$M prend $F comme elle veut", "$M prend $F dans l'anus", "$M prend $F en missionnaire dans l'anus", "$M prend $F sur le coté dans l'anus", "$M prend $F en levrette dans l'anus", "$M prend $F allongée sur le ventre dans l'anus", "$F fait toi venir devant la camera sans $M", "$F fait toi venir devant la camera", "$M fait venir $F devant la camera sans $M", "$M vient dans $F devant la camera", "$F écarte ton sexe devant la camera après que $M soit venu en toi", "$F fait venir $M devant la camera"] }
+        ];
+        state.levels = fullLevels;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'defis-connect-prod';
         let db, auth;
 
-        function updateConnectionStatus(text) {
-            document.getElementById('connectionStatus').textContent = text;
-        }
+        function updateStatus(text) { document.getElementById('connectionStatus').textContent = text; }
 
         window.spin = (levelIdx) => {
             if (timer) clearInterval(timer);
@@ -337,7 +175,7 @@
             saveToCloud();
         };
 
-        window.toggleSound = () => { state.isSoundEnabled = !state.isSoundEnabled; renderSoundIcon(); saveToCloud(); };
+        window.toggleSound = () => { state.isSoundEnabled = !state.isSoundEnabled; renderUI(); saveToCloud(); };
         window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
 
         window.addCheckItem = () => {
@@ -346,13 +184,13 @@
             if (val) {
                 state.checklist.push({ text: val, active: true });
                 input.value = '';
-                renderChecklist();
+                renderUI();
                 saveToCloud();
             }
         };
 
-        window.toggleCheckItem = (idx) => { state.checklist[idx].active = !state.checklist[idx].active; renderChecklist(); saveToCloud(); };
-        window.removeCheckItem = (idx) => { state.checklist.splice(idx, 1); renderChecklist(); saveToCloud(); };
+        window.toggleCheckItem = (idx) => { state.checklist[idx].active = !state.checklist[idx].active; renderUI(); saveToCloud(); };
+        window.removeCheckItem = (idx) => { state.checklist.splice(idx, 1); renderUI(); saveToCloud(); };
         window.updateLevelItems = (lIdx, val) => { state.levels[lIdx].items = val.split('\n').filter(line => line.trim() !== ''); saveToCloud(); };
         window.updateLevelDuration = (lIdx, val) => { state.levels[lIdx].duration = parseInt(val) || 0; saveToCloud(); };
 
@@ -363,7 +201,7 @@
                 remaining--;
                 if (remaining < 0) { 
                     clearInterval(timer); 
-                    playAlarm(); 
+                    if (state.isSoundEnabled) playAlarm();
                     showToast("Temps écoulé !"); 
                     display.textContent = "00:00";
                     return; 
@@ -374,35 +212,22 @@
             }, 1000);
         }
 
-        let audioCtx = null;
         function playAlarm() {
-            if (!state.isSoundEnabled) return;
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
             } catch(e) {}
         }
 
-        function renderSoundIcon() {
-            const container = document.getElementById('soundIconContainer');
-            if (container) {
-                container.innerHTML = `<i data-lucide="${state.isSoundEnabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${state.isSoundEnabled ? 'text-green-600' : 'text-red-600'}"></i>`;
-                lucide.createIcons();
-            }
-        }
-
-        function renderChecklist() {
-            const container = document.getElementById('checklistItems');
-            if (container) {
-                container.innerHTML = state.checklist.map((item, idx) => `
+        function renderUI() {
+            const listContainer = document.getElementById('checklistItems');
+            if (listContainer) {
+                listContainer.innerHTML = state.checklist.map((item, idx) => `
                     <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border">
                         <span class="text-xs font-bold uppercase">${item.text}</span>
                         <div class="flex gap-2 items-center">
@@ -411,63 +236,58 @@
                         </div>
                     </div>
                 `).join('');
-                lucide.createIcons();
             }
-        }
 
-        function renderConfig() {
-            const container = document.getElementById('levelEditors');
-            if (container) {
-                container.innerHTML = state.levels.map((level, lIdx) => `
-                    <div class="bg-white/40 p-4 rounded-2xl border border-white/60">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-black text-slate-700 uppercase text-xs tracking-wider">${level.name}</h4>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i>
-                                <input type="number" value="${level.duration}" onchange="updateLevelDuration(${lIdx}, this.value)" class="w-12 p-1 text-[10px] border rounded bg-white text-slate-800">
-                            </div>
+            const soundContainer = document.getElementById('soundIconContainer');
+            if (soundContainer) {
+                soundContainer.innerHTML = `<i data-lucide="${state.isSoundEnabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${state.isSoundEnabled ? 'text-green-600' : 'text-red-600'}"></i>`;
+            }
+
+            const configContainer = document.getElementById('levelEditors');
+            if (configContainer) {
+                configContainer.innerHTML = state.levels.map((level, lIdx) => `
+                    <div class="bg-white/40 p-4 rounded-2xl border border-white/60 text-slate-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-black uppercase text-xs">${level.name}</h4>
+                            <input type="number" value="${level.duration}" onchange="updateLevelDuration(${lIdx}, this.value)" class="w-12 p-1 text-[10px] border rounded">
                         </div>
-                        <textarea onchange="updateLevelItems(${lIdx}, this.value)" class="w-full h-32 text-[10px] p-2 rounded-xl border-none shadow-inner bg-white/80 focus:ring-2 focus:ring-purple-400 outline-none text-slate-800">${level.items.join('\n')}</textarea>
+                        <textarea onchange="updateLevelItems(${lIdx}, this.value)" class="w-full h-32 text-[10px] p-2 rounded-xl bg-white/80 border-none outline-none">${level.items.join('\n')}</textarea>
                     </div>
                 `).join('');
-                lucide.createIcons();
             }
+            lucide.createIcons();
         }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.remove('opacity-0');
+            t.textContent = msg; t.classList.remove('opacity-0');
             setTimeout(() => t.classList.add('opacity-0'), 3000);
         }
 
         async function saveToCloud() {
-            if (db && auth && auth.currentUser) {
+            if (db && auth?.currentUser) {
                 try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
-                    await setDoc(docRef, { state, updatedAt: Date.now() });
-                } catch (e) { console.warn("Erreur sauvegarde cloud"); }
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state'), { state, updatedAt: Date.now() });
+                } catch (e) {}
             }
         }
 
-        const init = async () => {
-            renderChecklist();
-            renderSoundIcon();
-            renderConfig();
-
-            // Vérifier si la config Firebase est présente
+        window.onload = async () => {
+            renderUI();
+            
+            // SI PAS DE CONFIG FIREBASE (Cas GitHub Pages sans clés)
             if (typeof __firebase_config === 'undefined' || !__firebase_config) {
-                updateConnectionStatus("Mode Local (Sans Cloud)");
-                return;
+                updateStatus("Mode Local Actif");
+                return; 
             }
 
             try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
+                const config = JSON.parse(__firebase_config);
+                const app = initializeApp(config);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                updateConnectionStatus("Authentification...");
+                updateStatus("Connexion Cloud...");
                 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -477,31 +297,19 @@
 
                 onAuthStateChanged(auth, (u) => {
                     if (u) {
-                        updateConnectionStatus("Connecté au Cloud");
-                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
-                        onSnapshot(docRef, (snap) => {
+                        updateStatus("Cloud Synchronisé");
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state'), (snap) => {
                             if (snap.exists()) {
-                                const cloudData = snap.data().state;
-                                if (cloudData) {
-                                    state = cloudData;
-                                    renderChecklist();
-                                    renderSoundIcon();
-                                    renderConfig();
-                                    document.getElementById('filterModeBtn').textContent = `Mode: ${state.filterMode === 'standard' ? 'Standard' : 'Strict'}`;
-                                }
+                                state = snap.data().state;
+                                renderUI();
                             } else { saveToCloud(); }
-                        }, (err) => {
-                            console.warn("Firestore snapshot error:", err);
                         });
                     }
                 });
-            } catch (err) { 
-                console.error("Firebase init failed:", err);
-                updateConnectionStatus("Échec Cloud - Mode Local");
+            } catch (err) {
+                updateStatus("Mode Local (Erreur Cloud)");
             }
         };
-
-        window.onload = init;
     </script>
 </body>
 </html>
