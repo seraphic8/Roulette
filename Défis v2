@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Défis Connect - Système de Gestion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes pop-in { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes pulse-red { 0%, 100% { background-color: rgba(239, 68, 68, 0.1); color: rgba(239, 68, 68, 1); } 50% { background-color: rgba(239, 68, 68, 0.4); color: rgba(255, 255, 255, 1); } }
+        .animate-pop { animation: pop-in 0.3s ease-out forwards; }
+        .timer-alert { animation: pulse-red 1s infinite; border-radius: 1rem; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); }
+        .level-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .level-card:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen font-sans text-slate-100">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-8">
+        <!-- Joueurs -->
+        <header class="glass rounded-2xl p-6 shadow-xl mb-6 flex flex-wrap gap-4 items-center justify-between border border-white/10">
+            <div class="flex gap-4">
+                <div class="relative">
+                    <input type="text" id="playerM" value="Joueur 1" class="bg-blue-900/30 border-2 border-blue-500/50 text-blue-100 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 transition-all w-32 md:w-40">
+                    <span class="absolute -top-3 left-2 bg-blue-500 text-white text-[10px] px-2 rounded-full font-bold">Joueur M</span>
+                </div>
+                <div class="relative">
+                    <input type="text" id="playerF" value="Joueur 2" class="bg-pink-900/30 border-2 border-pink-500/50 text-pink-100 rounded-lg px-3 py-2 focus:outline-none focus:border-pink-400 transition-all w-32 md:w-40">
+                    <span class="absolute -top-3 left-2 bg-pink-500 text-white text-[10px] px-2 rounded-full font-bold">Joueur F</span>
+                </div>
+            </div>
+            <div id="connectionStatus" class="text-xs font-medium text-slate-400 italic">Connexion...</div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section class="lg:col-span-2 glass rounded-3xl p-8 shadow-2xl flex flex-col items-center justify-between min-h-[500px] text-center relative overflow-hidden border border-white/10 text-slate-800">
+                <div class="w-full flex flex-col items-center flex-grow justify-center">
+                    <div id="timerContainer" class="px-6 py-2 transition-all duration-300 mb-8">
+                        <div id="timerDisplay" class="text-6xl md:text-8xl font-mono font-black text-slate-600/40 tracking-tighter">00:00</div>
+                    </div>
+                    <div id="resultContent" class="z-10 w-full px-4">
+                        <h2 id="activePlayerLabel" class="text-sm uppercase tracking-widest text-purple-400 font-bold mb-4">Prêt ?</h2>
+                        <p id="challengeText" class="text-2xl md:text-3xl font-semibold leading-tight mb-6 transition-colors duration-300">Choisissez votre intensité</p>
+                    </div>
+                </div>
+
+                <div id="controls" class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                    <button onclick="spin(0)" class="level-card group flex flex-col items-center gap-2 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20">
+                        <i data-lucide="feather" class="w-8 h-8 text-emerald-500"></i>
+                        <span class="text-xs font-bold uppercase text-emerald-500">Soft</span>
+                    </button>
+                    <button onclick="spin(1)" class="level-card group flex flex-col items-center gap-2 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20">
+                        <i data-lucide="flame" class="w-8 h-8 text-amber-500"></i>
+                        <span class="text-xs font-bold uppercase text-amber-500">Hot</span>
+                    </button>
+                    <button onclick="spin(2)" class="level-card group flex flex-col items-center gap-2 p-4 rounded-2xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20">
+                        <i data-lucide="zap" class="w-8 h-8 text-orange-500"></i>
+                        <span class="text-xs font-bold uppercase text-orange-500">Hard</span>
+                    </button>
+                    <button onclick="spin(3)" class="level-card group flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-600/10 border border-rose-600/30 hover:bg-rose-600/20">
+                        <i data-lucide="flag" class="w-8 h-8 text-rose-600"></i>
+                        <span class="text-xs font-bold uppercase text-rose-600">Finish</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="glass rounded-3xl p-6 shadow-xl border border-white/10 text-slate-800">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="w-5 h-5 text-purple-600"></i> Options
+                </h3>
+                <div class="mb-4 flex flex-col gap-2">
+                    <button onclick="toggleSound()" id="soundToggleBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 border border-slate-200">
+                        <span class="text-xs font-bold uppercase text-slate-600">Sonnerie</span>
+                        <div id="soundIconContainer"><i data-lucide="volume-2" class="w-5 h-5 text-green-600"></i></div>
+                    </button>
+                    <button onclick="toggleFilterMode()" id="filterModeBtn" class="w-full text-[10px] bg-slate-200 px-3 py-2 rounded-xl uppercase font-bold border border-slate-300">Mode: Standard</button>
+                </div>
+                <div id="checklistItems" class="space-y-2 max-h-[250px] overflow-y-auto pr-2"></div>
+                <div class="mt-4 flex gap-2">
+                    <input type="text" id="newCheckItem" class="flex-1 text-sm border rounded p-2 outline-none" placeholder="Mot-clé...">
+                    <button onclick="addCheckItem()" class="bg-purple-600 text-white px-4 rounded-lg font-bold">+</button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-10 space-y-4">
+            <button onclick="toggleSection('configSection')" class="w-full text-center text-white/50 hover:text-white text-sm flex items-center justify-center gap-2">
+                <i data-lucide="database" class="w-4 h-4"></i> Base de données
+            </button>
+            <div id="configSection" class="hidden glass rounded-2xl p-6 shadow-xl border border-white/10 text-slate-800">
+                <div id="levelEditors" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl transition-all opacity-0 pointer-events-none z-50 text-sm"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        let state = {
+            levels: [
+                { id: 0, name: "Soft", items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer caresse $inactivePlayer"], duration: 20 },
+                { id: 1, name: "Hot", items: ["$activePlayer suce la langue de $inactivePlayer"], duration: 60 },
+                { id: 2, name: "Hard", items: ["$activePlayer masturbe $inactivePlayer"], duration: 120 },
+                { id: 3, name: "Finish", items: ["$activePlayer fait venir $inactivePlayer"], duration: 0 }
+            ],
+            checklist: [{ text: "jouet", active: true }, { text: "plug", active: true }],
+            filterMode: 'standard', 
+            currentRoulettePlayer: 'M',
+            isSoundEnabled: true
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'defis-connect-v1';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let user = null;
+        let timer = null;
+        let audioCtx = null;
+
+        const getGameStateDoc = () => doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state');
+
+        function playAlarm() {
+            if (!state.isSoundEnabled) return;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        window.spin = (levelIdx) => {
+            clearInterval(timer);
+            const level = state.levels[levelIdx];
+            const pM = document.getElementById('playerM').value;
+            const pF = document.getElementById('playerF').value;
+            
+            let pool = level.items.filter(item => {
+                const match = state.checklist.find(c => item.toLowerCase().includes(c.text.toLowerCase()));
+                return state.filterMode === 'standard' ? (!match || match.active) : (match && match.active);
+            });
+
+            if (pool.length === 0) return showToast("Filtres trop restrictifs !");
+
+            const rawItem = pool[Math.floor(Math.random() * pool.length)];
+            const activeName = state.currentRoulettePlayer === 'M' ? pM : pF;
+            const inactiveName = state.currentRoulettePlayer === 'M' ? pF : pM;
+            
+            const finalItem = rawItem.replace(/\$activePlayer/g, activeName).replace(/\$inactivePlayer/g, inactiveName).replace(/\$M/g, pM).replace(/\$F/g, pF);
+
+            const challengeEl = document.getElementById('challengeText');
+            challengeEl.textContent = finalItem;
+            challengeEl.className = `text-2xl md:text-3xl font-semibold mb-6 animate-pop ${state.currentRoulettePlayer === 'M' ? 'text-blue-600' : 'text-pink-600'}`;
+            
+            document.getElementById('activePlayerLabel').textContent = `Au tour de ${activeName}`;
+            state.currentRoulettePlayer = state.currentRoulettePlayer === 'M' ? 'F' : 'M';
+
+            if (levelIdx === 3) {
+                document.getElementById('timerDisplay').textContent = "LIBRE";
+            } else {
+                startTimer(level.duration);
+            }
+        };
+
+        function startTimer(seconds) {
+            let remaining = seconds;
+            const display = document.getElementById('timerDisplay');
+            const container = document.getElementById('timerContainer');
+            timer = setInterval(() => {
+                remaining--;
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    playAlarm();
+                    showToast("Temps écoulé !");
+                }
+            }, 1000);
+        }
+
+        window.toggleSound = () => { state.isSoundEnabled = !state.isSoundEnabled; renderSoundIcon(); saveToCloud(); };
+        function renderSoundIcon() {
+            const container = document.getElementById('soundIconContainer');
+            container.innerHTML = `<i data-lucide="${state.isSoundEnabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${state.isSoundEnabled ? 'text-green-600' : 'text-red-600'}"></i>`;
+            lucide.createIcons();
+        }
+
+        window.renderChecklist = () => {
+            document.getElementById('checklistItems').innerHTML = state.checklist.map((item, idx) => `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border">
+                    <span class="text-xs font-bold uppercase">${item.text}</span>
+                    <input type="checkbox" ${item.active ? 'checked' : ''} onchange="toggleCheckItem(${idx})" class="w-5 h-4 accent-purple-600">
+                </div>
+            `).join('');
+            lucide.createIcons();
+        };
+
+        window.toggleCheckItem = (idx) => { state.checklist[idx].active = !state.checklist[idx].active; renderChecklist(); saveToCloud(); };
+        window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.remove('opacity-0');
+            setTimeout(() => t.classList.add('opacity-0'), 3000);
+        }
+
+        async function saveToCloud() {
+            if (user) await setDoc(getGameStateDoc(), { state, updatedAt: Date.now() });
+        }
+
+        const init = async () => {
+            lucide.createIcons();
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                onAuthStateChanged(auth, (u) => {
+                    user = u;
+                    if (user) {
+                        document.getElementById('connectionStatus').textContent = "Synchronisé Cloud";
+                        onSnapshot(getGameStateDoc(), (snap) => {
+                            if (snap.exists()) {
+                                state = snap.data().state;
+                                renderChecklist();
+                                renderSoundIcon();
+                            } else { saveToCloud(); }
+                        });
+                    }
+                });
+            } catch (err) { console.error(err); }
+        };
+        window.onload = init;
+    </script>
+</body>
+</html>
