@@ -77,6 +77,7 @@
                         <div id="soundIconContainer"><i data-lucide="volume-2" class="w-5 h-5 text-green-600"></i></div>
                     </button>
                     <button onclick="toggleFilterMode()" id="filterModeBtn" class="w-full text-[10px] bg-slate-200 px-3 py-2 rounded-xl uppercase font-bold border border-slate-300">Mode: Standard</button>
+                    <button onclick="resetHistory()" class="w-full text-[10px] bg-red-100 text-red-600 px-3 py-2 rounded-xl uppercase font-bold border border-red-200">Réinitialiser historique</button>
                 </div>
                 <div id="checklistItems" class="space-y-2 max-h-[250px] overflow-y-auto pr-2"></div>
                 <div class="mt-4 flex gap-2">
@@ -105,19 +106,14 @@
 
         let timer = null;
         let state = {
-            levels: [
-                { id: 0, name: "Soft", items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer caresse $inactivePlayer"], duration: 20 },
-                { id: 1, name: "Hot", items: ["$activePlayer suce la langue de $inactivePlayer", "$M masse les seins de $F"], duration: 60 },
-                { id: 2, name: "Hard", items: ["$activePlayer et $inactivePlayer faites un 69", "$M utilise le jouet sur $F"], duration: 120 },
-                { id: 3, name: "Finish", items: ["$activePlayer fait venir $inactivePlayer", "$M vient dans $F"], duration: 0 }
-            ],
+            levels: [],
             checklist: [{ text: "jouet", active: true }, { text: "plug", active: true }, { text: "anus", active: true }, { text: "camera", active: true }],
             filterMode: 'standard', 
             currentRoulettePlayer: 'M',
-            isSoundEnabled: true
+            isSoundEnabled: true,
+            usedItems: []
         };
 
-        // On réinjecte vos listes complètes ici par précaution
         const fullLevels = [
             { id: 0, name: "Soft", duration: 20, items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer embrasse $inactivePlayer sur la zone de son choix", "$activePlayer caresse $inactivePlayer", "$activePlayer se caresse", "$activePlayer demande à $inactivePlayer de se caresser la zone de ton choix", "$activePlayer masse la zone de ton choix de $inactivePlayer", "$activePlayer $inactivePlayer te masse la zone de ton choix", "$activePlayer caresse toi devant $inactivePlayer", "$activePlayer caresse $inactivePlayer", "$activePlayer lèche le cou de $inactivePlayer", "$activePlayer lèche la zone de son choix de $inactivePlayer", "$activePlayer suce les doigts de $inactivePlayer", "$activePlayer suce les tétons de $inactivePlayer", "$M regarde $F se caresser les seins", "$M suce ses tétons de $F", "$F se caresse les seins", "$F suce ses tétons", "$activePlayer et $inactivePlayer regardent une vidéo", "$activePlayer prend une photo de $inactivePlayer avec la camera", "$activePlayer bande les yeux de $inactivePlayer", "$activePlayer attache $inactivePlayer", "$activePlayer attache les mains de $inactivePlayer", "$activePlayer donne une fessèe $inactivePlayer"] },
             { id: 1, name: "Hot", duration: 60, items: ["$F frotte ton sexe contre celui de $M", "$activePlayer suce la langue de $inactivePlayer", "$activePlayer embrasse le sexe de $inactivePlayer", "$activePlayer caresse le sexe de $inactivePlayer", "$activePlayer leche le sexe de $inactivePlayer", "$activePlayer demande à $inactivePlayer de te caresser la zone de ton choix", "$M masse les seins de $F", "$M frotte ton sexe entre les fesses de $F", "$M frotte ton sexe entre les seins de $F", "$F frotte ton sexe contre le sexe de $M", "$F écarte ton sexe $M", "$F raconte une ancienne experience à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu te masturbes", "$F frotte ton jouet contre ton sexe", "$F leche ton jouet", "$F suce ton jouet", "$F caresse ton anus", "$M caresse l' anus de $F", "$M leche l' anus de $F", "$F écarte ton sexe devant la camera", "$F caresse toi devant la camera"] },
@@ -131,21 +127,38 @@
 
         function updateStatus(text) { document.getElementById('connectionStatus').textContent = text; }
 
+        window.resetHistory = () => {
+            state.usedItems = [];
+            showToast("Historique vidé !");
+            saveToCloud();
+        };
+
         window.spin = (levelIdx) => {
             if (timer) clearInterval(timer);
             const level = state.levels[levelIdx];
-            const pM = document.getElementById('playerM').value || "M";
-            const pF = document.getElementById('playerF').value || "F";
+            const pM = document.getElementById('playerM').value || "Joueur 1";
+            const pF = document.getElementById('playerF').value || "Joueur 2";
             
-            let pool = level.items.filter(item => {
+            let basePool = level.items.filter(item => {
                 const lowerItem = item.toLowerCase();
                 const match = state.checklist.find(c => lowerItem.includes(c.text.toLowerCase()));
                 return state.filterMode === 'standard' ? (!match || match.active) : (match && match.active);
             });
 
-            if (pool.length === 0) return showToast("Filtres trop restrictifs !");
+            let pool = basePool.filter(item => !state.usedItems.includes(item));
+
+            if (pool.length === 0) {
+                state.usedItems = state.usedItems.filter(item => !basePool.includes(item));
+                pool = basePool;
+                showToast("Cycle recommencé !");
+            }
+
+            if (pool.length === 0) return showToast("Aucun défi disponible !");
 
             const rawItem = pool[Math.floor(Math.random() * pool.length)];
+            state.usedItems.push(rawItem);
+            if (state.usedItems.length > 200) state.usedItems.shift(); 
+
             const activeName = state.currentRoulettePlayer === 'M' ? pM : pF;
             const inactiveName = state.currentRoulettePlayer === 'M' ? pF : pM;
             
@@ -157,9 +170,14 @@
 
             const challengeEl = document.getElementById('challengeText');
             challengeEl.textContent = finalItem;
-            challengeEl.className = `text-2xl md:text-3xl font-semibold mb-6 animate-pop ${state.currentRoulettePlayer === 'M' ? 'text-blue-600' : 'text-pink-600'}`;
             
+            let textColorClass = 'text-purple-600';
+            if (finalItem.startsWith(pM)) textColorClass = 'text-blue-600';
+            else if (finalItem.startsWith(pF)) textColorClass = 'text-pink-600';
+
+            challengeEl.className = `text-2xl md:text-3xl font-semibold mb-6 animate-pop ${textColorClass}`;
             document.getElementById('activePlayerLabel').textContent = `Au tour de ${activeName}`;
+            
             state.currentRoulettePlayer = state.currentRoulettePlayer === 'M' ? 'F' : 'M';
 
             if (levelIdx === 3 || level.duration === 0) {
@@ -167,6 +185,7 @@
             } else {
                 startTimer(level.duration);
             }
+            saveToCloud();
         };
 
         window.toggleFilterMode = () => {
@@ -212,16 +231,40 @@
             }, 1000);
         }
 
+        /**
+         * Nouveau système de son : Mélodie douce et élégante
+         */
         function playAlarm() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.type = 'sine'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            } catch(e) {}
+                
+                // Fonction pour jouer une note harmonieuse
+                const playNote = (freq, startTime, duration, vol) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'triangle'; // Son plus doux que 'sine' ou 'sawtooth'
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(vol, startTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+
+                const now = audioCtx.currentTime;
+                // Petite mélodie en Do Majeur (C5, E5, G5, C6)
+                playNote(523.25, now, 0.6, 0.15);       // Do
+                playNote(659.25, now + 0.15, 0.6, 0.15); // Mi
+                playNote(783.99, now + 0.3, 0.6, 0.15);  // Sol
+                playNote(1046.50, now + 0.45, 1.0, 0.2); // Do octave sup
+                
+            } catch(e) { console.error("Audio error", e); }
         }
 
         function renderUI() {
@@ -274,27 +317,21 @@
 
         window.onload = async () => {
             renderUI();
-            
-            // SI PAS DE CONFIG FIREBASE (Cas GitHub Pages sans clés)
             if (typeof __firebase_config === 'undefined' || !__firebase_config) {
                 updateStatus("Mode Local Actif");
                 return; 
             }
-
             try {
                 const config = JSON.parse(__firebase_config);
                 const app = initializeApp(config);
                 auth = getAuth(app);
                 db = getFirestore(app);
-
                 updateStatus("Connexion Cloud...");
-                
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-
                 onAuthStateChanged(auth, (u) => {
                     if (u) {
                         updateStatus("Cloud Synchronisé");
@@ -303,7 +340,7 @@
                                 state = snap.data().state;
                                 renderUI();
                             } else { saveToCloud(); }
-                        });
+                        }, (err) => console.error("Snapshot error", err));
                     }
                 });
             } catch (err) {
