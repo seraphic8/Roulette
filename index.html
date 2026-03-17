@@ -62,7 +62,7 @@
                     </button>
                     <button onclick="spin(3)" class="level-card group flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-600/10 border border-rose-600/30 hover:bg-rose-600/20">
                         <i data-lucide="flag" class="w-8 h-8 text-rose-600"></i>
-                        <span class="text-xs font-bold uppercase text-rose-600">Finish</span>
+                        <span class="text-xs font-bold uppercase text-rose-600">End</span>
                     </button>
                 </div>
             </section>
@@ -106,21 +106,18 @@
 
         let timer = null;
         let state = {
-            levels: [],
+            levels: [
+                { id: 0, name: "Soft", duration: 20, items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer embrasse $inactivePlayer sur la zone de son choix", "$activePlayer caresse $inactivePlayer", "$activePlayer se caresse", "$activePlayer demande à $inactivePlayer de se caresser la zone de ton choix", "$activePlayer masse la zone de ton choix de $inactivePlayer", "$activePlayer $inactivePlayer te masse la zone de ton choix", "$activePlayer caresse toi devant $inactivePlayer", "$activePlayer caresse $inactivePlayer", "$activePlayer lèche le cou de $inactivePlayer", "$activePlayer lèche la zone de son choix de $inactivePlayer", "$activePlayer suce les doigts de $inactivePlayer", "$activePlayer suce les tétons de $inactivePlayer", "$M regarde $F se caresser les seins", "$M suce ses tétons de $F", "$F se caresse les seins", "$F suce ses tétons", "$activePlayer et $inactivePlayer regardent une vidéo", "$activePlayer prend une photo de $inactivePlayer with the camera", "$activePlayer bande les yeux de $inactivePlayer", "$activePlayer attache $inactivePlayer", "$activePlayer attache les mains de $inactivePlayer", "$activePlayer donne une fessèe $inactivePlayer", "$M embrasse $F en la caressant", "$M embrasse $F en lui caressant les seins", "$F embrasse $M en le caressant", "$F embrasse $M en lui caressant le sexe", "$F embrasse $M en te caressant le sexe", "$F frotte ton jouet sur ton sexe"] },
+                { id: 1, name: "Hot", duration: 60, items: ["$M leche le sexe de $F", "$F leche le sexe de $M", "$M leche le sexe de $F en te masturbant", "$F leche le sexe de $M en te masturbant", "$F suce le sexe de $M", "$F suce le sexe de $M en te masturbant", "$F frotte ton sexe contre celui de $M", "$activePlayer suce la langue de $inactivePlayer", "$activePlayer embrasse le sexe de $inactivePlayer", "$activePlayer caresse le sexe de $inactivePlayer", "$activePlayer leche le sexe de $inactivePlayer", "$activePlayer demande à $inactivePlayer de te caresser la zone de ton choix", "$M masse les seins de $F", "$M frotte ton sexe entre les fesses de $F", "$M frotte ton sexe entre les seins de $F", "$F frotte ton sexe contre le sexe de $M", "$F écarte ton sexe $M", "$F raconte une ancienne experience à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu te masturbes", "$F frotte ton jouet contre ton sexe", "$F caresse ton anus", "$M caresse l' anus de $F", "$M leche l' anus de $F", "$F écarte ton sexe devant la camera", "$F caresse toi devant la camera", "$F frotte le sexe de $M sur ton sexe", "$F frotte ton sexe sur le sexe de $F"] },
+                { id: 2, name: "Hard", duration: 120, items: ["$activePlayer masturbe $inactivePlayer", "$activePlayer masturbe $inactivePlayer par derriere", "$activePlayer masturbe toi devant $inactivePlayer", "$activePlayer utilise la main de $inactivePlayer pour te faire plaisir", "$activePlayer et $inactivePlayer faites un 69", "$activePlayer et $inactivePlayer faites un 69 + jouet", "$activePlayer et $inactivePlayer masturbez vous mutuellement", "$activePlayer et $inactivePlayer masturbez vous mutuellement + jouet", "$M masturbe $F pendant qu'elle le suce", "$M utilise le jouet sur $F", "$M utilise le jouet sur $F pendant qu'elle te suce", "$M joue avec l' anus de $F pendant qu'elle te suce", "$M touche $F pendant qu'elle utilise son jouet", "$F masturbe $M pendant que tu utilises ton jouet", "$F met toi à 4pattes pour te masturber", "$F suce $M pendant que tu utilises ton jouet à 4pattes", "$F suce $M pendant que tu utilises ton jouet", "$F suce $M pendant que tu te masturbes", "$F met toi à 4pattes pour sucer $M debout", "$F insere un plug dans ton anus", "$F insere un plug tail dans ton anus", "$M met un plug dans l'anus de $F", "$F utilise un plug pendant que tu te masturbes", "$F masturbe ton anus avec tes doigts", "$F masturbe ton anus avec un jouet", "$M masturbe l' anus de $F avec tes doigts", "$M masturbe l' anus de $F avec un jouet", "$F suce un jouet en te masturbant", "$F suce un jouet en masturbant $F", "$F masturbe $F pendant qu'elle suce un jouet", "$F suce un jouet devant la camera", "$F suce un jouet devant la camera sans $M", "F masturbe toi devant la camera", "F masturbe toi devant la camera sans $M", "$F suce $M devant la camera", "$activePlayer et $inactivePlayer masturbez vous devant la camera"] },
+                { id: 3, name: "End", duration: 0, items: ["$activePlayer fait toi venir avec tes doigts", "$activePlayer fait toi venir avec tes doigts pendant que tu suce $M", "$activePlayer fait toi venir avec tes doigts et un plug", "$activePlayer fait toi venir avec tes doigts et un plug pendant que tu suce $M", "$activePlayer fait toi venir avec tes jouets et un plug", "$activePlayer fait toi venir avec tes jouets et un plug pendant que tu suce $M", "$M fait venir $F avec son jouet", "$M fait venir $F avec son jouet et un plug", "$M fait toi venir dans la bouche de $F", "$M fait toi venir dans le sexe de $F", "$M fait toi venir sur le visage de $F", "$M fait toi venir sur le corps de $F", "$M fait toi venir sur les seins de $F", "$M fait toi venir sur le sexe de $F", "$M fait toi venir sur les fesses de $F", "$M fait toi venir sur toi", "$F fait toi venir avec le jouet pendant que $M joue avec ton anus", "$M fait toi venir dans l' anus de $F", "$M fait toi venir dans l' anus de $F pendant qu'elle se fait venir", "$activePlayer fait venir $inactivePlayer", "$activePlayer fait toi venir comme tu veux", "$F fait venir $M dans ta bouche", "$F fait venir $M dans ta bouche et avale son sperme", "$activePlayer fait venir $inactivePlayer avec ta bouche", "$F fait venir $M sur la partie de son choix", "$F fait venir $M avec ta main", "$F chevauche $M de face", "$F chevauche $M de dos", "$activePlayer choisit la position", "$M prend $F en missionnaire", "$M prend $F sur le coté", "$M prend $F en levrette", "$M prend $F allongée sur le ventre", "$M vient dans $F", "$M prend $F en missionnaire pendant qu elle suce son jouet", "$M prend $F sur le coté pendant qu elle suce son jouet", "$M prend $F en levrette pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug pendant qu elle suce son jouet", "$M prend $F sur le coté + plug pendant qu elle suce son jouet", "$M prend $F en levrette + plug pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre + plug pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug", "$M prend $F sur le coté pendant + plug", "$M prend $F en levrette pendant + plug", "$M prend $F allongée sur le ventre + plug", "$M prend $F comme tu veux", "$M prend $F comme elle veut", "$M prend $F dans l'anus", "$M prend $F en missionnaire dans l'anus", "$M prend $F sur le coté dans l'anus", "$M prend $F en levrette dans l'anus", "$M prend $F allongée sur le ventre dans l'anus", "$F fait toi venir devant la camera sans $M", "$F fait toi venir devant la camera", "$M fait venir $F devant la camera sans $M", "$M vient dans $F devant la camera", "$F écarte ton sexe devant la camera après que $M soit venu en toi", "$F fait venir $M devant la camera"] }
+            ],
             checklist: [{ text: "jouet", active: true }, { text: "plug", active: true }, { text: "anus", active: true }, { text: "camera", active: true }],
             filterMode: 'standard', 
             currentRoulettePlayer: 'M',
             isSoundEnabled: true,
             usedItems: []
         };
-
-        const fullLevels = [
-            { id: 0, name: "Soft", duration: 20, items: ["$activePlayer embrasse $inactivePlayer", "$activePlayer embrasse $inactivePlayer sur la zone de son choix", "$activePlayer caresse $inactivePlayer", "$activePlayer se caresse", "$activePlayer demande à $inactivePlayer de se caresser la zone de ton choix", "$activePlayer masse la zone de ton choix de $inactivePlayer", "$activePlayer $inactivePlayer te masse la zone de ton choix", "$activePlayer caresse toi devant $inactivePlayer", "$activePlayer caresse $inactivePlayer", "$activePlayer lèche le cou de $inactivePlayer", "$activePlayer lèche la zone de son choix de $inactivePlayer", "$activePlayer suce les doigts de $inactivePlayer", "$activePlayer suce les tétons de $inactivePlayer", "$M regarde $F se caresser les seins", "$M suce ses tétons de $F", "$F se caresse les seins", "$F suce ses tétons", "$activePlayer et $inactivePlayer regardent une vidéo", "$activePlayer prend une photo de $inactivePlayer avec la camera", "$activePlayer bande les yeux de $inactivePlayer", "$activePlayer attache $inactivePlayer", "$activePlayer attache les mains de $inactivePlayer", "$activePlayer donne une fessèe $inactivePlayer"] },
-            { id: 1, name: "Hot", duration: 60, items: ["$F frotte ton sexe contre celui de $M", "$activePlayer suce la langue de $inactivePlayer", "$activePlayer embrasse le sexe de $inactivePlayer", "$activePlayer caresse le sexe de $inactivePlayer", "$activePlayer leche le sexe de $inactivePlayer", "$activePlayer demande à $inactivePlayer de te caresser la zone de ton choix", "$M masse les seins de $F", "$M frotte ton sexe entre les fesses de $F", "$M frotte ton sexe entre les seins de $F", "$F frotte ton sexe contre le sexe de $M", "$F écarte ton sexe $M", "$F raconte une ancienne experience à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu le masturbes", "$F raconte un fantasme à $M pendant que tu te masturbes", "$F frotte ton jouet contre ton sexe", "$F leche ton jouet", "$F suce ton jouet", "$F caresse ton anus", "$M caresse l' anus de $F", "$M leche l' anus de $F", "$F écarte ton sexe devant la camera", "$F caresse toi devant la camera"] },
-            { id: 2, name: "Hard", duration: 120, items: ["$activePlayer masturbe $inactivePlayer", "$activePlayer masturbe $inactivePlayer par derriere", "$activePlayer masturbe toi devant $inactivePlayer", "$activePlayer utilise la main de $inactivePlayer pour te faire plaisir", "$activePlayer et $inactivePlayer faites un 69", "$activePlayer et $inactivePlayer faites un 69 + jouet", "$activePlayer et $inactivePlayer masturbez vous mutuellement", "$activePlayer et $inactivePlayer masturbez vous mutuellement + jouet", "$M masturbe $F pendant qu'elle le suce", "$M utilise le jouet sur $F", "$M utilise le jouet sur $F pendant qu'elle te suce", "$M joue avec l' anus de $F pendant qu'elle te suce", "$M touche $F pendant qu'elle utilise son jouet", "$F masturbe $M pendant que tu utilises ton jouet", "$F met toi à 4pattes pour te masturber", "$F suce $M pendant que tu utilises ton jouet à 4pattes", "$F suce $M pendant que tu utilises ton jouet", "$F suce $M pendant que tu te masturbes", "$F met toi à 4pattes pour sucer $M debout", "$F insere un plug dans ton anus", "$F insere un plug tail dans ton anus", "$M met un plug dans l'anus de $F", "$F utilise un plug pendant que tu te masturbes", "$F masturbe ton anus avec tes doigts", "$F masturbe ton anus avec un jouet", "$M masturbe l' anus de $F avec tes doigts", "$M masturbe l' anus de $F avec un jouet", "$F suce un jouet devant la camera", "$F suce un jouet devant la camera sans $M", "F masturbe toi devant la camera", "F masturbe toi devant la camera sans $M", "$F suce $M devant la camera", "$activePlayer et $inactivePlayer masturbez vous devant la camera"] },
-            { id: 3, name: "Finish", duration: 0, items: ["$activePlayer fait toi venir avec tes doigts", "$activePlayer fait toi venir avec tes doigts pendant que tu suce $M", "$activePlayer fait toi venir avec tes doigts et un plug", "$activePlayer fait toi venir avec tes doigts et un plug pendant que tu suce $M", "$activePlayer fait toi venir avec tes jouets et un plug", "$activePlayer fait toi venir avec tes jouets et un plug pendant que tu suce $M", "$M fait venir $F avec son jouet", "$M fait venir $F avec son jouet et un plug", "$M fait toi venir dans la bouche de $F", "$M fait toi venir dans le sexe de $F", "$M fait toi venir sur le visage de $F", "$M fait toi venir sur le corps de $F", "$M fait toi venir sur les seins de $F", "$M fait toi venir sur le sexe de $F", "$M fait toi venir sur les fesses de $F", "$M fait toi venir sur toi", "$F fait toi venir avec le jouet pendant que $M joue avec ton anus", "$M fait toi venir dans l' anus de $F", "$M fait toi venir dans l' anus de $F pendant qu'elle se fait venir", "$activePlayer fait venir $inactivePlayer", "$activePlayer fait toi venir comme tu veux", "$F fait venir $M dans ta bouche", "$F fait venir $M dans ta bouche et avale son sperme", "$activePlayer fait venir $inactivePlayer avec ta bouche", "$F fait venir $M sur la partie de son choix", "$F fait venir $M avec ta main", "$F chevauche $M de face", "$F chevauche $M de dos", "$activePlayer choisit la position", "$M prend $F en missionnaire", "$M prend $F sur le coté", "$M prend $F en levrette", "$M prend $F allongée sur le ventre", "$M vient dans $F", "$M prend $F en missionnaire pendant qu elle suce son jouet", "$M prend $F sur le coté pendant qu elle suce son jouet", "$M prend $F en levrette pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug pendant qu elle suce son jouet", "$M prend $F sur le coté + plug pendant qu elle suce son jouet", "$M prend $F en levrette + plug pendant qu elle suce son jouet", "$M prend $F allongée sur le ventre + plug pendant qu elle suce son jouet", "$M vient dans $F", "$M prend $F en missionnaire + plug", "$M prend $F sur le coté pendant + plug", "$M prend $F en levrette pendant + plug", "$M prend $F allongée sur le ventre + plug", "$M prend $F comme tu veux", "$M prend $F comme elle veut", "$M prend $F dans l'anus", "$M prend $F en missionnaire dans l'anus", "$M prend $F sur le coté dans l'anus", "$M prend $F en levrette dans l'anus", "$M prend $F allongée sur le ventre dans l'anus", "$F fait toi venir devant la camera sans $M", "$F fait toi venir devant la camera", "$M fait venir $F devant la camera sans $M", "$M vient dans $F devant la camera", "$F écarte ton sexe devant la camera après que $M soit venu en toi", "$F fait venir $M devant la camera"] }
-        ];
-        state.levels = fullLevels;
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'defis-connect-prod';
         let db, auth;
@@ -180,7 +177,7 @@
             
             state.currentRoulettePlayer = state.currentRoulettePlayer === 'M' ? 'F' : 'M';
 
-            if (levelIdx === 3 || level.duration === 0) {
+            if (level.name === 'End' || level.duration === 0) {
                 document.getElementById('timerDisplay').textContent = "LIBRE";
             } else {
                 startTimer(level.duration);
@@ -231,40 +228,28 @@
             }, 1000);
         }
 
-        /**
-         * Nouveau système de son : Mélodie douce et élégante
-         */
         function playAlarm() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Fonction pour jouer une note harmonieuse
                 const playNote = (freq, startTime, duration, vol) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    
-                    osc.type = 'triangle'; // Son plus doux que 'sine' ou 'sawtooth'
+                    osc.type = 'triangle';
                     osc.frequency.setValueAtTime(freq, startTime);
-                    
                     gain.gain.setValueAtTime(0, startTime);
                     gain.gain.linearRampToValueAtTime(vol, startTime + 0.05);
                     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-                    
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
-                    
                     osc.start(startTime);
                     osc.stop(startTime + duration);
                 };
-
                 const now = audioCtx.currentTime;
-                // Petite mélodie en Do Majeur (C5, E5, G5, C6)
-                playNote(523.25, now, 0.6, 0.15);       // Do
-                playNote(659.25, now + 0.15, 0.6, 0.15); // Mi
-                playNote(783.99, now + 0.3, 0.6, 0.15);  // Sol
-                playNote(1046.50, now + 0.45, 1.0, 0.2); // Do octave sup
-                
-            } catch(e) { console.error("Audio error", e); }
+                playNote(523.25, now, 0.6, 0.15);       
+                playNote(659.25, now + 0.15, 0.6, 0.15); 
+                playNote(783.99, now + 0.3, 0.6, 0.15);  
+                playNote(1046.50, now + 0.45, 1.0, 0.2); 
+            } catch(e) {}
         }
 
         function renderUI() {
@@ -280,12 +265,10 @@
                     </div>
                 `).join('');
             }
-
             const soundContainer = document.getElementById('soundIconContainer');
             if (soundContainer) {
                 soundContainer.innerHTML = `<i data-lucide="${state.isSoundEnabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${state.isSoundEnabled ? 'text-green-600' : 'text-red-600'}"></i>`;
             }
-
             const configContainer = document.getElementById('levelEditors');
             if (configContainer) {
                 configContainer.innerHTML = state.levels.map((level, lIdx) => `
@@ -337,7 +320,9 @@
                         updateStatus("Cloud Synchronisé");
                         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'global', 'state'), (snap) => {
                             if (snap.exists()) {
-                                state = snap.data().state;
+                                const cloudState = snap.data().state;
+                                // Fusionner les niveaux pour garder les nouveaux items si le cloud est vide ou ancien
+                                state = cloudState;
                                 renderUI();
                             } else { saveToCloud(); }
                         }, (err) => console.error("Snapshot error", err));
